@@ -168,6 +168,11 @@ vim.o.confirm = true
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
+-- init.lua
+vim.keymap.set('n', '<C-h>', '<C-w>h', { silent = true })
+vim.keymap.set('n', '<C-j>', '<C-w>j', { silent = true })
+vim.keymap.set('n', '<C-k>', '<C-w>k', { silent = true })
+vim.keymap.set('n', '<C-l>', '<C-w>l', { silent = true })
 
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
@@ -205,6 +210,7 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
 -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
 
+vim.keymap.set('i', 'jj', '<Esc>', { desc = 'Exit insert mode' })
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -255,6 +261,17 @@ require('lazy').setup({
   --
   -- Use `opts = {}` to automatically pass options to a plugin's `setup()` function, forcing the plugin to be loaded.
   --
+  {
+    'numToStr/Comment.nvim',
+    config = function()
+      require('Comment').setup {
+        mappings = {
+          basic = true, -- enables gcc/gc
+          extra = true, -- enables gco/gcO/gcA
+        },
+      }
+    end,
+  },
 
   -- Alternatively, use `config = function() ... end` for full control over the configuration.
   -- If you prefer to call `setup` explicitly, use:
@@ -283,6 +300,68 @@ require('lazy').setup({
       },
     },
   },
+
+  -- This plugin is suppose to be the closest things to magit for emacs
+  {
+    'NeogitOrg/neogit',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'sindrets/diffview.nvim',
+    },
+    config = function()
+      require('neogit').setup { kind = 'vsplit' }
+      --vim.keymap.set('n', '<leader>gs', '<cmd>Neogit<CR>', { desc = 'Open Neogit' })
+      vim.keymap.set('n', '<leader>gs', function()
+        local path = vim.fn.expand '%:p:h'
+        require('neogit').open { cwd = path }
+      end, { desc = "Open Neogit for current file's project" })
+    end,
+  },
+
+  {
+    'nvim-orgmode/orgmode',
+    event = 'VeryLazy',
+    ft = { 'org' },
+    config = function()
+      -- Setup orgmode
+      require('orgmode').setup {
+        org_agenda_files = '~/Documents/org/**/*',
+        org_default_notes_file = '~/Documents/org/refile.org',
+        org_preview_image_path = '~/Documents/org/images',
+      }
+
+      -- NOTE: If you are using nvim-treesitter with ~ensure_installed = "all"~ option
+      -- add ~org~ to ignore_install
+      -- require('nvim-treesitter.configs').setup({
+      --   ensure_installed = 'all',
+      --   ignore_install = { 'org' },
+      -- })
+    end,
+  },
+  -- {
+  --   '3rd/image.nvim',
+  --   dependencies = {
+  --     'nvim-treesitter/nvim-treesitter',
+  --     'nvim-orgmode/orgmode',
+  --   },
+  --   opts = {
+  --     backend = 'kitty', -- or 'iterm2' depending on your terminal
+  --     integrations = {
+  --       markdown = { enabled = true },
+  --       org = { enabled = true },
+  --     },
+  --     max_width = 100,
+  --     max_height = 30,
+  --     max_height_window_percentage = 50,
+  --     kitty_method = 'normal',
+  --     rocks = {
+  --       enabled = false, -- 🔥 absolutely disables luarocks
+  --       hererocks = false,
+  --     },
+  --   },
+  --   branch = 'master',
+  --   build = false, -- 🔥 critical: stop lazy.nvim from running luarocks build scripts
+  -- },
 
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
@@ -363,6 +442,7 @@ require('lazy').setup({
     event = 'VimEnter',
     dependencies = {
       'nvim-lua/plenary.nvim',
+      'nvim-telescope/telescope-file-browser.nvim',
       { -- If encountering errors, see telescope-fzf-native README for installation instructions
         'nvim-telescope/telescope-fzf-native.nvim',
 
@@ -409,13 +489,18 @@ require('lazy').setup({
         --
         -- defaults = {
         --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
+        --     i = { ['<esc>'] = 'actions.close' },
+        --     n = { ['<esc>'] = 'actions.close' },
         --   },
         -- },
         -- pickers = {}
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
+            file_browser = {
+              theme = 'dropdown',
+              hijack_netrw = true,
+            },
           },
         },
       }
@@ -423,19 +508,30 @@ require('lazy').setup({
       -- Enable Telescope extensions if they are installed
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
+      pcall(require('telescope').load_extension, 'file_browser')
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
+      vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = '[F]ind [F]iles' })
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
+      vim.keymap.set('n', '<leader>fb', function()
+        require('telescope').extensions.file_browser.file_browser()
+      end, { desc = 'Telescope File Browser' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+      vim.keymap.set('n', '<leader>fd', function()
+        builtin.find_files { cwd = vim.fn.expand '%:p:h' }
+      end, { desc = '[F]ind files in current [D]irectory' })
+
+      vim.keymap.set('n', '<leader>gd', function()
+        builtin.live_grep { cwd = vim.fn.expand '%:p:h' }
+      end, { desc = '[G]rep in current [D]irectory' })
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -572,6 +668,57 @@ require('lazy').setup({
           --  the definition of its *type*, not where it was *defined*.
           map('grt', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
 
+          -- Auto-format Go files before saving
+          if vim.bo[event.buf].filetype == 'go' then
+            vim.api.nvim_create_autocmd('BufWritePre', {
+              buffer = event.buf,
+              callback = function()
+                -- Get the LSP client that attached to this buffer (the one in the LspAttach event)
+                local client = vim.lsp.get_client_by_id(event.data.client_id)
+                if not client then
+                  return
+                end
+                local offset_encoding = client.offset_encoding or 'utf-16'
+
+                -- Build params safely
+                local range_params = vim.lsp.util.make_range_params(nil, offset_encoding)
+                local params = {
+                  textDocument = range_params.textDocument,
+                  range = range_params.range,
+                  context = { only = { 'source.organizeImports' } },
+                }
+
+                -- Request "organize imports" code actions
+                local result = vim.lsp.buf_request_sync(event.buf, 'textDocument/codeAction', params, 3000)
+                if not result then
+                  return
+                end
+
+                for _, res in pairs(result) do
+                  if res and res.result then
+                    for _, r in pairs(res.result) do
+                      if r.edit then
+                        vim.lsp.util.apply_workspace_edit(r.edit, 'utf-8')
+                      elseif r.command then
+                        -- Safe command execution (modern API)
+                        local ok = pcall(vim.lsp.commands.execute, r.command, event.buf, client.id)
+                        if not ok then
+                          vim.notify('Failed to execute LSP command for organizeImports', vim.log.levels.WARN)
+                        end
+                      end
+                    end
+                  end
+                end
+
+                -- Finally, format the file
+                local ok = pcall(vim.lsp.buf.format, { async = false })
+                if not ok then
+                  vim.notify('LSP formatting failed', vim.log.levels.WARN)
+                end
+              end,
+            })
+          end
+
           -- This function resolves a difference between neovim nightly (version 0.11) and stable (version 0.10)
           ---@param client vim.lsp.Client
           ---@param method vim.lsp.protocol.Method
@@ -672,7 +819,18 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         -- clangd = {},
-        -- gopls = {},
+        gopls = {
+          settings = {
+            gopls = {
+              gofumpt = true, -- Use gofumpt for stricter formatting
+              analyses = {
+                unusedparams = true,
+                shadow = true,
+              },
+              staticcheck = true, -- Enable extra static analysis
+            },
+          },
+        },
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -716,6 +874,9 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
+        'gopls',
+        'goimports',
+        'golangci-lint',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
