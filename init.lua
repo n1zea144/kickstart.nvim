@@ -329,15 +329,9 @@ require('lazy').setup({
         org_default_notes_file = '~/Documents/org/refile.org',
         org_preview_image_path = '~/Documents/org/images',
       }
-
-      -- NOTE: If you are using nvim-treesitter with ~ensure_installed = "all"~ option
-      -- add ~org~ to ignore_install
-      -- require('nvim-treesitter.configs').setup({
-      --   ensure_installed = 'all',
-      --   ignore_install = { 'org' },
-      -- })
     end,
   },
+
   -- {
   --   '3rd/image.nvim',
   --   dependencies = {
@@ -1051,6 +1045,14 @@ require('lazy').setup({
           comments = { italic = false }, -- Disable italics in comments
         },
       }
+
+      local function set_statusline_colors()
+        vim.api.nvim_set_hl(0, 'MiniStatuslineInactive', { fg = '#565F89', bg = '#A76DC7' })
+      end
+
+      vim.api.nvim_create_autocmd('ColorScheme', {
+        callback = set_statusline_colors,
+      })
 
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
