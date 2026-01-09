@@ -211,6 +211,16 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
 
 vim.keymap.set('i', 'jj', '<Esc>', { desc = 'Exit insert mode' })
+
+-- to show window numbers
+vim.keymap.set('n', '<leader>wn', function()
+  vim.opt.winbar = '%=%{winnr()}'
+end, { desc = 'Show window numbers' })
+
+vim.keymap.set('n', '<leader>wN', function()
+  vim.opt.winbar = ''
+end, { desc = 'Hide window numbers' })
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
